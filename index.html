@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horse Race Growth Report</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="settings-gear" id="settingsGear" title="Show setup panel">⚙️</div>
+    <div class="settings-overlay" id="settingsOverlay"></div>
+    <div class="input-overlay" id="inputOverlay"></div>
+    <div class="container">
+        <header>
+            <h1><del>the grupdate</del> horse race</h1>
+            <p><b>place your bets!</b> Booky or Reggy, who did better this week?</p>
+        </header>
+
+        <div class="input-section">
+            <div class="input-group">
+                <label for="bookableActual">Bookable Actual So Far</label>
+                <input type="number" id="bookableActual" placeholder="e.g. 45" min="0" step="1">
+            </div>
+            <div class="input-group">
+                <label for="bookableTarget">Bookable Total Target</label>
+                <input type="number" id="bookableTarget" placeholder="e.g. 100" min="0" step="1">
+            </div>
+            <div class="input-group">
+                <label for="registrationsActual">Registrations Actual So Far</label>
+                <input type="number" id="registrationsActual" placeholder="e.g. 45" min="0" step="1">
+            </div>
+            <div class="input-group">
+                <label for="registrationsTarget">Registrations Total Target</label>
+                <input type="number" id="registrationsTarget" placeholder="e.g. 100" min="0" step="1">
+            </div>
+            <div class="input-group">
+                <label for="weekTarget">Target % for this week</label>
+                <input type="number" id="weekTarget" placeholder="e.g. 60" min="0" max="100" step="0.1">
+            </div>
+            <button id="startRace" class="start-btn">🏁 Start Race!</button>
+        </div>
+
+        <div class="race-track">
+            <div class="finish-line"></div>
+            <div class="horse horse1" id="horse1">
+                <img src="Bookable.png" alt="Bookable Horse" class="horse-img" />
+                <div class="horse-label">Booky</div>
+            </div>
+            <div class="horse horse2" id="horse2">
+                <img src="Registrations.png" alt="Registrations Horse" class="horse-img" />
+                <div class="horse-label">Reggy</div>
+            </div>
+        </div>
+
+        <div class="results" id="results" style="display: none;">
+            <div class="results-content">
+                <h2 id="winnerText"></h2>
+                <div class="growth-section">
+                    <div class="growth-label">Bookable growth so far this cycle:</div>
+                    <div class="growth-value" id="finalPercent1">0%</div>
+                </div>
+                <div class="growth-section">
+                    <div class="growth-label">Registrations growth so far this cycle:</div>
+                    <div class="growth-value" id="finalPercent2">0%</div>
+                </div>
+                <div class="winner-highlight" id="winnerHighlight"></div>
+                <div class="difference-section">
+                    <span class="difference-label">Difference:</span>
+                    <span class="difference-value" id="difference">0%</span>
+                </div>
+                <button id="resetRace" class="reset-btn">🔄 Race Again</button>
+            </div>
+        </div>
+
+        <div class="confetti-container" id="confetti"></div>
+    </div>
+
+    <button id="floatingStartBtn" class="floating-start-btn" style="display: none;">🏁 Start Race!</button>
+
+    <audio id="drumrollAudio" src="drumroll.mp3" preload="auto"></audio>
+
+    <script src="script.js"></script>
+</body>
+</html> 
