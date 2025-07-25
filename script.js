@@ -14,9 +14,30 @@ class HorseRace {
         this.inputOverlay = document.getElementById('inputOverlay');
         this.floatingStartBtn = document.getElementById('floatingStartBtn');
         this.drumrollAudio = document.getElementById('drumrollAudio');
+        this.raceCommentary = document.getElementById('raceCommentary');
+        
+        // New elements
+        this.percent1Display = document.getElementById('percent1');
+        this.percent2Display = document.getElementById('percent2');
+        this.bookableSection = document.getElementById('bookableSection');
+        this.registrationsSection = document.getElementById('registrationsSection');
+        
+        // Commentary phrases for excitement
+        this.commentaryPhrases = [
+            "🎤 Ready to witness some epic growth racing!",
+            "🔥 The competition is heating up!",
+            "⚡ Lightning-fast growth ahead!",
+            "🏆 Who will claim victory today?",
+            "🎯 Precision and speed combined!",
+            "💪 Peak performance incoming!",
+            "🌟 Stellar growth showdown!",
+            "🚀 Rocketing towards success!"
+        ];
         
         this.initializeEventListeners();
         this.hideSetupPanel();
+        this.setupQuickTestButtons();
+        this.updateCommentary();
     }
 
     initializeEventListeners() {
@@ -28,11 +49,13 @@ class HorseRace {
         this.floatingStartBtn.addEventListener('click', () => this.startRace());
         
         // Update floating button state on input
-        document.getElementById('bookableActual').addEventListener('input', () => this.updateFloatingBtnState());
-        document.getElementById('bookableTarget').addEventListener('input', () => this.updateFloatingBtnState());
-        document.getElementById('registrationsActual').addEventListener('input', () => this.updateFloatingBtnState());
-        document.getElementById('registrationsTarget').addEventListener('input', () => this.updateFloatingBtnState());
-        document.getElementById('weekTarget').addEventListener('input', () => this.updateFloatingBtnState());
+        const inputs = ['bookableActual', 'bookableTarget', 'registrationsActual', 'registrationsTarget', 'weekTarget'];
+        inputs.forEach(inputId => {
+            document.getElementById(inputId).addEventListener('input', () => {
+                this.updateFloatingBtnState();
+                this.updateLivePercentages();
+            });
+        });
         
         // Allow Enter key to start race
         document.addEventListener('keypress', (e) => {
@@ -40,6 +63,77 @@ class HorseRace {
                 this.startRace();
             }
         });
+
+        // Add escape key to close setup
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.inputSection.classList.contains('show')) {
+                this.hideSetupPanel();
+            }
+        });
+    }
+
+    setupQuickTestButtons() {
+        const quickTestData = [
+            { label: '🔥 Close Race', b1: 47, b2: 52, r1: 45, r2: 48, week: 50 },
+            { label: '💪 Big Lead', b1: 35, b2: 80, r1: 25, r2: 75, week: 60 },
+            { label: '🤝 Dead Tie', b1: 50, b2: 100, r1: 50, r2: 100, week: 50 },
+            { label: '⚡ Comeback', b1: 25, b2: 50, r1: 40, r2: 50, week: 55 }
+        ];
+        
+        const quickTestButtons = document.getElementById('quickTestButtons');
+        
+        quickTestData.forEach(data => {
+            const btn = document.createElement('button');
+            btn.textContent = data.label;
+            btn.className = 'quick-test-btn';
+            btn.addEventListener('click', () => {
+                document.getElementById('bookableActual').value = data.b1;
+                document.getElementById('bookableTarget').value = data.b2;
+                document.getElementById('registrationsActual').value = data.r1;
+                document.getElementById('registrationsTarget').value = data.r2;
+                document.getElementById('weekTarget').value = data.week;
+                this.updateLivePercentages();
+                this.updateFloatingBtnState();
+                
+                // Visual feedback
+                btn.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    btn.style.transform = '';
+                }, 150);
+            });
+            quickTestButtons.appendChild(btn);
+        });
+    }
+
+    updateLivePercentages() {
+        const bookableActual = parseFloat(document.getElementById('bookableActual').value) || 0;
+        const bookableTarget = parseFloat(document.getElementById('bookableTarget').value) || 1;
+        const registrationsActual = parseFloat(document.getElementById('registrationsActual').value) || 0;
+        const registrationsTarget = parseFloat(document.getElementById('registrationsTarget').value) || 1;
+
+        const percent1 = Math.min(100, (bookableActual / bookableTarget) * 100);
+        const percent2 = Math.min(100, (registrationsActual / registrationsTarget) * 100);
+
+        if (this.percent1Display) this.percent1Display.textContent = `${percent1.toFixed(1)}%`;
+        if (this.percent2Display) this.percent2Display.textContent = `${percent2.toFixed(1)}%`;
+
+        // Update horse positions slightly based on percentages (preview)
+        if (!this.isRacing) {
+            const previewOffset = Math.max(percent1, percent2) > 0 ? 10 : 0;
+            this.horse1.style.left = `${50 + (percent1 / 100) * previewOffset}px`;
+            this.horse2.style.left = `${50 + (percent2 / 100) * previewOffset}px`;
+        }
+    }
+
+    updateCommentary(message = null) {
+        if (!this.raceCommentary) return;
+        
+        if (message) {
+            this.raceCommentary.querySelector('p').textContent = message;
+        } else {
+            const randomPhrase = this.commentaryPhrases[Math.floor(Math.random() * this.commentaryPhrases.length)];
+            this.raceCommentary.querySelector('p').textContent = randomPhrase;
+        }
     }
 
     showSetupPanel() {
@@ -48,6 +142,7 @@ class HorseRace {
         this.settingsOverlay.classList.add('active');
         this.inputOverlay.classList.add('active');
         this.floatingStartBtn.style.display = 'none';
+        this.updateCommentary("🔧 Configuring your epic race setup!");
     }
 
     hideSetupPanel() {
@@ -56,6 +151,7 @@ class HorseRace {
         this.settingsOverlay.classList.remove('active');
         this.inputOverlay.classList.remove('active');
         this.updateFloatingBtnState();
+        this.updateCommentary();
     }
 
     updateFloatingBtnState() {
@@ -67,6 +163,7 @@ class HorseRace {
             const bookableTarget = parseFloat(document.getElementById('bookableTarget').value);
             const registrationsActual = parseFloat(document.getElementById('registrationsActual').value);
             const registrationsTarget = parseFloat(document.getElementById('registrationsTarget').value);
+            
             if (
                 isNaN(bookableActual) || isNaN(bookableTarget) || bookableTarget <= 0 ||
                 isNaN(registrationsActual) || isNaN(registrationsTarget) || registrationsTarget <= 0 ||
@@ -124,10 +221,13 @@ class HorseRace {
         // Reset horses to starting position
         this.resetHorses();
         
+        // Update commentary for race start
+        this.updateCommentary("🏁 And they're off! The race for growth supremacy begins!");
+        
         // Calculate race parameters
         const trackWidth = this.raceTrack.offsetWidth - 150; // Account for horse width and finish line
-        const maxSpeed = 3; // pixels per frame
-        const minSpeed = 1;
+        const maxSpeed = 3.5; // Increased max speed for more excitement
+        const minSpeed = 1.2;
         
         // Calculate speeds based on percentages (higher percentage = faster)
         const speed1 = minSpeed + (percent1 / 100) * (maxSpeed - minSpeed);
@@ -143,7 +243,10 @@ class HorseRace {
         if (this.drumrollAudio) {
             this.drumrollAudio.currentTime = 0;
             this.drumrollAudio.loop = true;
-            this.drumrollAudio.play();
+            this.drumrollAudio.play().catch(() => {
+                // Handle autoplay restrictions
+                console.log('Audio autoplay prevented');
+            });
         }
     }
 
@@ -160,6 +263,17 @@ class HorseRace {
         let frameCount = 0;
         let hasChangedLead = false;
         let lastLeadChange = 0;
+        let commentaryTimer = 0;
+        
+        // Commentary updates during race
+        const raceCommentaries = [
+            "🔥 Neck and neck competition!",
+            "⚡ Booky is making a move!",
+            "💪 Reggy fights back!",
+            "🎯 What a performance!",
+            "🏆 Victory is within reach!",
+            "🌟 Incredible speed burst!"
+        ];
         
         // Calculate base speeds with some randomness
         const baseSpeed1 = speed1;
@@ -175,30 +289,44 @@ class HorseRace {
         
         const animate = () => {
             frameCount++;
+            commentaryTimer++;
+            
+            // Update commentary every 60 frames (roughly 1 second)
+            if (commentaryTimer % 60 === 0) {
+                const randomCommentary = raceCommentaries[Math.floor(Math.random() * raceCommentaries.length)];
+                this.updateCommentary(randomCommentary);
+            }
             
             // Add momentum and random bursts
             if (!finished1) {
                 // Random speed variations to create excitement
                 const randomFactor1 = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
-                const burstChance1 = Math.random() < 0.08; // 8% chance of speed burst (increased)
-                const burstMultiplier1 = burstChance1 ? 1.5 : 1;
+                const burstChance1 = Math.random() < 0.1; // 10% chance of speed burst
+                const burstMultiplier1 = burstChance1 ? 1.8 : 1; // Increased burst multiplier
                 
                 // Add visual feedback for speed bursts
                 if (burstChance1) {
                     this.horse1.querySelector('.horse-img').classList.add('speed-burst');
+                    this.updateCommentary("⚡ Booky with a lightning burst!");
                     setTimeout(() => {
                         this.horse1.querySelector('.horse-img').classList.remove('speed-burst');
-                    }, 300);
+                    }, 400);
                 }
                 
                 // Momentum system - horses can gain/lose momentum
-                if (Math.random() < 0.15) { // 15% chance to change momentum (increased)
-                    momentum1 = (Math.random() - 0.5) * 0.8; // -0.4 to 0.4 (increased range)
+                if (Math.random() < 0.18) { // 18% chance to change momentum
+                    momentum1 = (Math.random() - 0.5) * 1.0; // Increased momentum range
                 }
                 
                 const currentSpeed1 = (baseSpeed1 + momentum1) * randomFactor1 * burstMultiplier1;
                 pos1 += currentSpeed1;
                 this.horse1.style.left = `${pos1}px`;
+                
+                // Update live percentage display
+                const progress1 = Math.min(100, (pos1 - 50) / (trackWidth - 50) * 100);
+                if (this.percent1Display) {
+                    this.percent1Display.textContent = `${(percent1 * progress1 / 100).toFixed(1)}%`;
+                }
                 
                 if (pos1 >= trackWidth) {
                     finished1 = true;
@@ -206,6 +334,7 @@ class HorseRace {
                     this.horse1.style.left = `${pos1}px`;
                     if (!raceEnded) {
                         raceEnded = true;
+                        this.updateCommentary("🏁 We have a winner! What an incredible finish!");
                         this.finishRace(winner, percent1, percent2, bookableTarget, registrationsTarget, weekTarget, bookableActual, registrationsActual);
                         return;
                     }
@@ -215,25 +344,32 @@ class HorseRace {
             if (!finished2) {
                 // Random speed variations to create excitement
                 const randomFactor2 = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
-                const burstChance2 = Math.random() < 0.08; // 8% chance of speed burst (increased)
-                const burstMultiplier2 = burstChance2 ? 1.5 : 1;
+                const burstChance2 = Math.random() < 0.1; // 10% chance of speed burst
+                const burstMultiplier2 = burstChance2 ? 1.8 : 1; // Increased burst multiplier
                 
                 // Add visual feedback for speed bursts
                 if (burstChance2) {
                     this.horse2.querySelector('.horse-img').classList.add('speed-burst');
+                    this.updateCommentary("💥 Reggy unleashes power!");
                     setTimeout(() => {
                         this.horse2.querySelector('.horse-img').classList.remove('speed-burst');
-                    }, 300);
+                    }, 400);
                 }
                 
                 // Momentum system - horses can gain/lose momentum
-                if (Math.random() < 0.15) { // 15% chance to change momentum (increased)
-                    momentum2 = (Math.random() - 0.5) * 0.8; // -0.4 to 0.4 (increased range)
+                if (Math.random() < 0.18) { // 18% chance to change momentum
+                    momentum2 = (Math.random() - 0.5) * 1.0; // Increased momentum range
                 }
                 
                 const currentSpeed2 = (baseSpeed2 + momentum2) * randomFactor2 * burstMultiplier2;
                 pos2 += currentSpeed2;
                 this.horse2.style.left = `${pos2}px`;
+                
+                // Update live percentage display
+                const progress2 = Math.min(100, (pos2 - 50) / (trackWidth - 50) * 100);
+                if (this.percent2Display) {
+                    this.percent2Display.textContent = `${(percent2 * progress2 / 100).toFixed(1)}%`;
+                }
                 
                 if (pos2 >= trackWidth) {
                     finished2 = true;
@@ -241,6 +377,7 @@ class HorseRace {
                     this.horse2.style.left = `${pos2}px`;
                     if (!raceEnded) {
                         raceEnded = true;
+                        this.updateCommentary("🏁 Incredible finish! The crowd goes wild!");
                         this.finishRace(winner, percent1, percent2, bookableTarget, registrationsTarget, weekTarget, bookableActual, registrationsActual);
                         return;
                     }
@@ -255,14 +392,16 @@ class HorseRace {
                     // Force the winning horse to take the lead
                     if (winner === 1 && pos2 > pos1) {
                         // Give horse 1 a significant boost to take the lead
-                        pos1 += baseSpeed1 * 2;
+                        pos1 += baseSpeed1 * 2.5;
                         this.horse1.style.left = `${pos1}px`;
                         hasChangedLead = true;
+                        this.updateCommentary("🔥 Booky makes the crucial move!");
                     } else if (winner === 2 && pos1 > pos2) {
                         // Give horse 2 a significant boost to take the lead
-                        pos2 += baseSpeed2 * 2;
+                        pos2 += baseSpeed2 * 2.5;
                         this.horse2.style.left = `${pos2}px`;
                         hasChangedLead = true;
+                        this.updateCommentary("💪 Reggy surges ahead!");
                     }
                 }
             }
@@ -276,11 +415,11 @@ class HorseRace {
                 if (distanceToFinish1 < 100 && distanceToFinish2 < 100) {
                     if (winner === 1 && pos2 > pos1) {
                         // Give horse 1 a boost if it's behind but should win
-                        pos1 += baseSpeed1 * 0.5;
+                        pos1 += baseSpeed1 * 0.8;
                         this.horse1.style.left = `${pos1}px`;
                     } else if (winner === 2 && pos1 > pos2) {
                         // Give horse 2 a boost if it's behind but should win
-                        pos2 += baseSpeed2 * 0.5;
+                        pos2 += baseSpeed2 * 0.8;
                         this.horse2.style.left = `${pos2}px`;
                     }
                 }
@@ -305,6 +444,7 @@ class HorseRace {
                 if (currentLeader && currentLeader !== lastLeadChange) {
                     if (lastLeadChange !== 0) { // Not the initial leader
                         hasChangedLead = true;
+                        this.updateCommentary("🔄 What a lead change! This is incredible!");
                     }
                     lastLeadChange = currentLeader;
                 }
@@ -335,7 +475,7 @@ class HorseRace {
         // Show results after a short delay
         setTimeout(() => {
             this.showResults(winner, percent1, percent2, bookableTarget, registrationsTarget, weekTarget, bookableActual, registrationsActual);
-        }, 1000);
+        }, 1200);
         
         this.isRacing = false;
         this.startBtn.disabled = false;
@@ -353,12 +493,10 @@ class HorseRace {
         const finalPercent2 = document.getElementById('finalPercent2');
         const difference = document.getElementById('difference');
         const winnerHighlight = document.getElementById('winnerHighlight');
-        const bookableSection = finalPercent1.closest('.growth-section');
-        const regsSection = finalPercent2.closest('.growth-section');
 
         // Remove previous winner highlight
-        bookableSection.classList.remove('winner');
-        regsSection.classList.remove('winner');
+        if (this.bookableSection) this.bookableSection.classList.remove('winner');
+        if (this.registrationsSection) this.registrationsSection.classList.remove('winner');
         winnerHighlight.textContent = '';
 
         // Calculate actuals and targets
@@ -367,59 +505,70 @@ class HorseRace {
         let weekTargetDisplay = '';
         let bookableVsTarget = '';
         let regsVsTarget = '';
+        
         if (!isNaN(bookableTarget) && !isNaN(weekTarget)) {
             const bookableShouldBe = (bookableTarget * weekTarget / 100).toFixed(1);
-            bookableTargetDisplay = `Target for this week: ${weekTarget}% (${bookableShouldBe})`;
+            bookableTargetDisplay = `Target: ${weekTarget}% (${bookableShouldBe})`;
             if (bookableActual >= parseFloat(bookableShouldBe)) {
-                bookableVsTarget = '<span style="color:#4CAF50;font-weight:700;">Above target 🎉</span>';
+                bookableVsTarget = '<span style="color:#4CAF50;font-weight:700;">✅ Above target!</span>';
             } else {
-                bookableVsTarget = '<span style="color:#ff6b6b;font-weight:700;">Below target</span>';
+                bookableVsTarget = '<span style="color:#ff6b6b;font-weight:700;">📈 Below target</span>';
             }
         }
+        
         if (!isNaN(registrationsTarget) && !isNaN(weekTarget)) {
             const regsShouldBe = (registrationsTarget * weekTarget / 100).toFixed(1);
-            regsTargetDisplay = `Target for this week: ${weekTarget}% (${regsShouldBe})`;
+            regsTargetDisplay = `Target: ${weekTarget}% (${regsShouldBe})`;
             if (registrationsActual >= parseFloat(regsShouldBe)) {
-                regsVsTarget = '<span style="color:#4CAF50;font-weight:700;">Above target 🎉</span>';
+                regsVsTarget = '<span style="color:#4CAF50;font-weight:700;">✅ Above target!</span>';
             } else {
-                regsVsTarget = '<span style="color:#ff6b6b;font-weight:700;">Below target</span>';
+                regsVsTarget = '<span style="color:#ff6b6b;font-weight:700;">📈 Below target</span>';
             }
         }
 
         // Set winner text and highlight
         if (winner === 1) {
-            winnerText.textContent = '🏆 Bookable Wins! 🏆';
-            winnerText.style.color = '#ffe066';
-            bookableSection.classList.add('winner');
-            winnerHighlight.textContent = 'Bookable had the highest growth this cycle!';
+            winnerText.textContent = '🏆 BOOKABLE DOMINATES! 🏆';
+            winnerText.style.color = '#ffd700';
+            if (this.bookableSection) this.bookableSection.classList.add('winner');
+            winnerHighlight.textContent = '🎯 Bookable achieved the highest growth this period!';
         } else if (winner === 2) {
-            winnerText.textContent = '🏆 Registrations Wins! 🏆';
-            winnerText.style.color = '#ffe066';
-            regsSection.classList.add('winner');
-            winnerHighlight.textContent = 'Registrations had the highest growth this cycle!';
+            winnerText.textContent = '🏆 REGISTRATIONS RULES! 🏆';
+            winnerText.style.color = '#ffd700';
+            if (this.registrationsSection) this.registrationsSection.classList.add('winner');
+            winnerHighlight.textContent = '📝 Registrations had the strongest performance!';
         } else {
-            winnerText.textContent = '🤝 It\'s a Tie! 🤝';
+            winnerText.textContent = '🤝 PERFECT TIE! 🤝';
             winnerText.style.color = '#FF9800';
-            winnerHighlight.textContent = 'Both Bookable and Registrations grew equally!';
+            winnerHighlight.textContent = '⚖️ Both teams achieved identical growth rates!';
         }
 
-        // Update statistics
-        finalPercent1.innerHTML = `${percent1.toFixed(1)}%<br><span style='font-size:1rem;font-weight:400;'>(${bookableActual} / ${bookableTarget})</span>` + (bookableTargetDisplay ? `<br><span style='font-size:1rem;font-weight:400;'>${bookableTargetDisplay}</span>` : '') + (bookableVsTarget ? `<br>${bookableVsTarget}` : '');
-        finalPercent2.innerHTML = `${percent2.toFixed(1)}%<br><span style='font-size:1rem;font-weight:400;'>(${registrationsActual} / ${registrationsTarget})</span>` + (regsTargetDisplay ? `<br><span style='font-size:1rem;font-weight:400;'>${regsTargetDisplay}</span>` : '') + (regsVsTarget ? `<br>${regsVsTarget}` : '');
+        // Update statistics with enhanced formatting
+        finalPercent1.innerHTML = `${percent1.toFixed(1)}%<br><span style='font-size:1rem;font-weight:400;opacity:0.8;'>(${bookableActual} / ${bookableTarget})</span>` + 
+            (bookableTargetDisplay ? `<br><span style='font-size:0.9rem;font-weight:500;opacity:0.7;'>${bookableTargetDisplay}</span>` : '') + 
+            (bookableVsTarget ? `<br>${bookableVsTarget}` : '');
+            
+        finalPercent2.innerHTML = `${percent2.toFixed(1)}%<br><span style='font-size:1rem;font-weight:400;opacity:0.8;'>(${registrationsActual} / ${registrationsTarget})</span>` + 
+            (regsTargetDisplay ? `<br><span style='font-size:0.9rem;font-weight:500;opacity:0.7;'>${regsTargetDisplay}</span>` : '') + 
+            (regsVsTarget ? `<br>${regsVsTarget}` : '');
+            
         const diff = Math.abs(percent1 - percent2).toFixed(1);
         difference.textContent = `${diff}%`;
 
-        // Show confetti for winner or tie
-        this.createConfetti();
+        // Enhanced confetti for results
+        this.createEnhancedConfetti();
 
         // Show results
         this.results.style.display = 'block';
+        
+        // Update commentary for results
+        this.updateCommentary("🎉 What an incredible race! Champions emerge!");
     }
 
     createConfetti() {
-        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
+        const colors = ['#ffd700', '#ff6b35', '#4CAF50', '#2196F3', '#9C27B0', '#FF5722'];
         
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 75; i++) { // Increased confetti count
             setTimeout(() => {
                 const confetti = document.createElement('div');
                 confetti.className = 'confetti';
@@ -427,46 +576,68 @@ class HorseRace {
                 confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
                 confetti.style.animationDelay = Math.random() * 2 + 's';
                 confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                confetti.style.width = (Math.random() * 8 + 8) + 'px';
+                confetti.style.height = confetti.style.width;
                 
                 this.confettiContainer.appendChild(confetti);
                 
                 // Remove confetti after animation
                 setTimeout(() => {
-                    confetti.remove();
-                }, 5000);
-            }, i * 50);
+                    if (confetti.parentNode) {
+                        confetti.remove();
+                    }
+                }, 6000);
+            }, i * 30);
         }
     }
 
+    createEnhancedConfetti() {
+        // Create multiple bursts for dramatic effect
+        this.createConfetti();
+        setTimeout(() => this.createConfetti(), 500);
+        setTimeout(() => this.createConfetti(), 1000);
+    }
+
     resetRace() {
+        // Reset percentages
+        if (this.percent1Display) this.percent1Display.textContent = '0%';
+        if (this.percent2Display) this.percent2Display.textContent = '0%';
+        
         // Show setup panel again
         this.showSetupPanel();
         this.updateFloatingBtnState();
+        this.updateCommentary("🔧 Ready for another epic showdown!");
     }
 
     resetHorses() {
         this.horse1.style.left = '50px';
         this.horse2.style.left = '50px';
+        this.horse1.classList.remove('winner', 'leading');
+        this.horse2.classList.remove('winner', 'leading');
     }
 
     showError(message) {
-        // Create temporary error message
+        // Create temporary error message with enhanced styling
         const errorDiv = document.createElement('div');
         errorDiv.style.cssText = `
             position: fixed;
-            top: 20px;
+            top: 30px;
             left: 50%;
             transform: translateX(-50%);
-            background: #ff6b6b;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
             color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            font-weight: 600;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-weight: 700;
             z-index: 10000;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            animation: slideDown 0.3s ease;
+            box-shadow: 0 15px 30px rgba(255, 107, 107, 0.3);
+            animation: slideDown 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            font-size: 1.1rem;
         `;
-        errorDiv.textContent = message;
+        errorDiv.innerHTML = `⚠️ ${message}`;
         
         // Add animation styles
         const style = document.createElement('style');
@@ -480,71 +651,53 @@ class HorseRace {
         
         document.body.appendChild(errorDiv);
         
-        // Remove error message after 3 seconds
+        // Remove error message after 4 seconds
         setTimeout(() => {
-            errorDiv.remove();
-            style.remove();
-        }, 3000);
+            if (errorDiv.parentNode) {
+                errorDiv.remove();
+            }
+            if (style.parentNode) {
+                style.remove();
+            }
+        }, 4000);
+        
+        // Update floating button state after error
+        this.updateFloatingBtnState();
     }
 }
 
 // Initialize the horse race when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new HorseRace();
+    const horseRace = new HorseRace();
     
-    // Add some fun hover effects
-    const horses = document.querySelectorAll('.horse-body');
-    horses.forEach(horse => {
+    // Add enhanced hover effects for horses
+    const horses = document.querySelectorAll('.horse');
+    horses.forEach((horse, index) => {
         horse.addEventListener('mouseenter', () => {
-            horse.style.transform = 'scale(1.1)';
+            if (!horseRace.isRacing) {
+                horse.style.transform = 'translateY(-50%) scale(1.05)';
+                horse.style.filter = 'drop-shadow(0 8px 20px rgba(255, 215, 0, 0.4))';
+            }
         });
         horse.addEventListener('mouseleave', () => {
-            horse.style.transform = 'scale(1)';
+            if (!horseRace.isRacing) {
+                horse.style.transform = 'translateY(-50%) scale(1)';
+                horse.style.filter = 'drop-shadow(0 5px 15px rgba(0,0,0,0.3))';
+            }
         });
     });
+
+    // Add keyboard shortcuts info
+    console.log('🏁 Horse Race Growth Tracker Shortcuts:');
+    console.log('⚙️  Space: Toggle setup panel');
+    console.log('🏁 Enter: Start race (when setup is open)');
+    console.log('🚪 Escape: Close setup panel');
     
-    // Add some sample data buttons for quick testing
-    const inputSection = document.querySelector('.input-section');
-    const sampleDataDiv = document.createElement('div');
-    sampleDataDiv.style.cssText = `
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-        margin-top: 15px;
-    `;
-    
-    const sampleData = [
-        { label: 'Close Race', p1: 45, p2: 48 },
-        { label: 'Big Win', p1: 25, p2: 75 },
-        { label: 'Tie', p1: 50, p2: 50 }
-    ];
-    
-    sampleData.forEach(data => {
-        const btn = document.createElement('button');
-        btn.textContent = data.label;
-        btn.style.cssText = `
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        `;
-        btn.addEventListener('mouseenter', () => {
-            btn.style.transform = 'translateY(-2px)';
-        });
-        btn.addEventListener('mouseleave', () => {
-            btn.style.transform = 'translateY(0)';
-        });
-        btn.addEventListener('click', () => {
-            document.getElementById('bookableActual').value = data.p1;
-            document.getElementById('registrationsActual').value = data.p2;
-        });
-        sampleDataDiv.appendChild(btn);
+    // Add space key shortcut for setup panel
+    document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && !e.target.matches('input')) {
+            e.preventDefault();
+            horseRace.toggleSetupPanel();
+        }
     });
-    
-    inputSection.appendChild(sampleDataDiv);
 }); 
