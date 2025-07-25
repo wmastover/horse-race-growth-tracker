@@ -142,6 +142,7 @@ class HorseRace {
         this.settingsOverlay.classList.add('active');
         this.inputOverlay.classList.add('active');
         this.floatingStartBtn.style.display = 'none';
+        this.floatingStartBtn.style.visibility = 'hidden';
         this.updateCommentary("🔧 Configuring your epic race setup!");
     }
 
@@ -158,6 +159,7 @@ class HorseRace {
         // Show the floating button only if settings are closed
         if (!this.inputSection.classList.contains('show')) {
             this.floatingStartBtn.style.display = 'block';
+            this.floatingStartBtn.style.visibility = 'visible';
             // Validate inputs
             const bookableActual = parseFloat(document.getElementById('bookableActual').value);
             const bookableTarget = parseFloat(document.getElementById('bookableTarget').value);
@@ -179,6 +181,7 @@ class HorseRace {
             }
         } else {
             this.floatingStartBtn.style.display = 'none';
+            this.floatingStartBtn.style.visibility = 'hidden';
         }
     }
 
@@ -193,6 +196,8 @@ class HorseRace {
     startRace() {
         // Hide floating button during race
         this.floatingStartBtn.style.display = 'none';
+        this.floatingStartBtn.style.visibility = 'hidden';
+        
         const bookableActual = parseFloat(document.getElementById('bookableActual').value);
         const bookableTarget = parseFloat(document.getElementById('bookableTarget').value);
         const registrationsActual = parseFloat(document.getElementById('registrationsActual').value);
@@ -206,6 +211,8 @@ class HorseRace {
             bookableActual < 0 || registrationsActual < 0
         ) {
             this.showError('Please enter valid actuals and targets for both teams!');
+            // Show the button again if there's an error
+            this.updateFloatingBtnState();
             return;
         }
 
@@ -485,6 +492,9 @@ class HorseRace {
             this.drumrollAudio.pause();
             this.drumrollAudio.currentTime = 0;
         }
+        
+        // Don't show floating button immediately - wait for results to be dismissed
+        // The button will reappear when resetRace is called
     }
 
     showResults(winner, percent1, percent2, bookableTarget, registrationsTarget, weekTarget, bookableActual, registrationsActual) {
